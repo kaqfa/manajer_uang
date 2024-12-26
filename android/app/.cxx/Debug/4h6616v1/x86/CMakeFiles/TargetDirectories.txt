@@ -1,0 +1,2 @@
+/Users/kaqfa/Documents/Kuliah/Perangkat Bergerak/20241/man_uang/android/app/.cxx/Debug/4h6616v1/x86/CMakeFiles/edit_cache.dir
+/Users/kaqfa/Documents/Kuliah/Perangkat Bergerak/20241/man_uang/android/app/.cxx/Debug/4h6616v1/x86/CMakeFiles/rebuild_cache.dir
