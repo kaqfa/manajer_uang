@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/transaction.dart';
 import '../pages/transaction_form.dart';
-import 'formater.dart'; // Import kelas Transaction
+import 'formater.dart';
 
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
@@ -47,7 +47,7 @@ class TransactionItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '${transaction.date.day}',
+                    '${transaction.transactionDate.day}',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   Container(
@@ -57,7 +57,7 @@ class TransactionItem extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      '${transaction.date.month}/${transaction.date.year}',
+                      '${transaction.transactionDate.month}/${transaction.transactionDate.year}',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:man_uang/components/our_button.dart';
+import 'package:man_uang/utils/api_provider.dart';
 
-import '../components/dummy_data.dart';
 import '../models/transaction.dart';
 
 class TransactionForm extends StatefulWidget {
@@ -15,34 +15,62 @@ class TransactionForm extends StatefulWidget {
 
 class _TransactionFormState extends State<TransactionForm> {
   final _formKey = GlobalKey<FormState>();
+  final api = APIProvider();
   late String _description;
   late int _amount;
   late DateTime _date;
   late String _type;
-  String? _selectedCategory;
+  Category? _selectedCategory;
+  List<Category> categories = [];
+
+  Future<void> getCategories() async {
+    api.getCategories().then((categories) {
+      // print('get categories');
+      setState(() {
+        this.categories = categories;
+        if (widget.transaction == null) {
+          _selectedCategory = categories[0];
+        } else {
+          _selectedCategory = widget.transaction!.category;
+        }
+      });
+    });
+  }
+
+  Future<void> insertTransaction() async {
+    Transaction trans = Transaction(
+      id: 0,
+      amount: _amount,
+      description: _description,
+      type: _type,
+      category: _selectedCategory!,
+      transactionDate: _date,
+    );
+    api.addTransaction(trans);
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      await insertTransaction();
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    getCategories();
     if (widget.transaction != null) {
       _description = widget.transaction!.description;
       _amount = widget.transaction!.amount;
-      _date = widget.transaction!.date;
+      _date = widget.transaction!.transactionDate;
       _type = widget.transaction!.type;
-      _selectedCategory = widget.transaction!.category;
     } else {
       _description = '';
       _amount = 0;
       _date = DateTime.now();
       _type = '1';
-      _selectedCategory = categories[0];
-    }
-  }
-
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      Navigator.of(context).pop();
     }
   }
 
@@ -80,7 +108,7 @@ class _TransactionFormState extends State<TransactionForm> {
       ),
       body: Container(
         height: double.infinity,
-        color: Colors.green[50], // Latar belakang hijau muda
+        color: Colors.green[50],
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -178,7 +206,7 @@ class _TransactionFormState extends State<TransactionForm> {
                   },
                 ),
                 SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                DropdownButtonFormField<Category>(
                   value: _selectedCategory,
                   decoration: InputDecoration(
                     labelText: 'Kategori',
@@ -191,7 +219,7 @@ class _TransactionFormState extends State<TransactionForm> {
                       categories.map((category) {
                         return DropdownMenuItem(
                           value: category,
-                          child: Text(category),
+                          child: Text(category.name),
                         );
                       }).toList(),
                   onChanged: (value) {
@@ -201,7 +229,11 @@ class _TransactionFormState extends State<TransactionForm> {
                   },
                 ),
                 SizedBox(height: 20),
-                OurButton(onPressed: () {}, title: "Simpan", size: 20),
+                OurButton(
+                  onPressed: () => _submitForm(),
+                  title: "Simpan",
+                  size: 20,
+                ),
               ],
             ),
           ),

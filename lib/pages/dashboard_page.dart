@@ -1,15 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:man_uang/components/formater.dart';
+import 'package:man_uang/models/transaction.dart';
+import 'package:man_uang/models/user.dart';
 import 'package:man_uang/pages/login_page.dart';
 import 'package:man_uang/pages/transaction_form.dart';
+import 'package:man_uang/utils/api_provider.dart';
+import 'package:man_uang/utils/secure_storage.dart';
 
-import '../components/dummy_data.dart';
 import '../components/transaction_item.dart';
 
-class DashboardPage extends StatelessWidget {
-  final int saldo = 1500000;
-  final String username = "John Doe";
-  DashboardPage({super.key});
+class DashboardPage extends StatefulWidget {
+  DashboardPage({super.key, required this.user});
+  final User user;
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  final SecureStorageService storage = SecureStorageService();
+  final APIProvider api = APIProvider();
+
+  int saldo = 0;
+
+  List<Transaction> transactions = [];
+
+  _DashboardPageState();
+
+  Future<void> getTransactions() async {
+    api.getTransactions().then((trans) {
+      setState(() {
+        this.transactions = trans;
+        this.saldo = trans.fold(0, (int saldoAwal, Transaction record) {
+          if (record.type == '1') {
+            return saldoAwal + record.amount;
+          } else {
+            return saldoAwal - record.amount;
+          }
+        });
+      });
+    });
+  }
+
+  void logout() async {
+    storage.deleteAllTokens();
+  }
+
+  Future<void> setUser() async {
+    User? auser = await storage.getUser();
+    auser ??= await api.getProfile();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setUser();
+    getTransactions();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +66,8 @@ class DashboardPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => TransactionForm()),
-          );
+          ).whenComplete(() => getTransactions());
+          // getTransactions();
         },
         child: Icon(Icons.add_circle_rounded),
       ),
@@ -32,16 +80,21 @@ class DashboardPage extends StatelessWidget {
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'logout') {
+                logout();
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => LoginPage()),
                   (route) => false,
                 );
+              } else if (value == 'action') {
+                print("aksi berjalan");
+                api.getCategories();
               }
             },
             itemBuilder: (BuildContext context) {
               return [
                 PopupMenuItem<String>(value: 'logout', child: Text('Logout')),
+                PopupMenuItem(value: 'action', child: Text("Temp Action")),
               ];
             },
           ),
@@ -70,7 +123,7 @@ class DashboardPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Hai, $username",
+                        "Hai, ${widget.user.firstname} ${widget.user.lastname}",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
